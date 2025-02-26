@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Каталог товаров</title>
+  <style>
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 16px;
+      margin: 8px;
+      display: inline-block;
+      width: 200px;
+      vertical-align: top;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+    }
+
+    .card p {
+      margin: 4px 0;
+    }
+
+    .price {
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Каталог товаров</h1>
+  <div id="catalog"></div>
+
+  <script>
+    async function loadProducts() {
+      try {
+        // Бэкенд ProductCatalogService отдает товары по /api/products
+        const response = await fetch('/api/products');
+        const products = await response.json();
+
+        const catalogContainer = document.getElementById('catalog');
+        // Очищаем контейнер на случай повторной загрузки
+        catalogContainer.innerHTML = '';
+
+        products.forEach(product => {
+          const card = document.createElement('div');
+          card.className = 'card';
+
+          card.innerHTML = `
+                        <h3>${product.name}</h3>
+                        <p class="price">${product.price} руб.</p>
+                        <p>${product.description}</p>
+                        <p>Категории: ${product.categories.join(', ')}</p>
+                    `;
+          catalogContainer.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Ошибка при загрузке товаров:', err);
+      }
+    }
+
+    loadProducts();
+  </script>
+</body>
+
+</html>
