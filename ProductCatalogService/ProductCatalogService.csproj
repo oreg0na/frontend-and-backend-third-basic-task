@@ -6,4 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="HotChocolate.Data" Version="15.0.3" />
+    <ProjectReference Include="..\AdminPanelService\AdminPanelService.csproj" />
+    <PackageReference Include="HotChocolate.AspNetCore" Version="15.0.3" />
+  </ItemGroup>
+
 </Project>

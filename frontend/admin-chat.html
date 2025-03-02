@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Чат поддержки (Админ)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .chat-container,
+    .login-container {
+      width: 400px;
+      height: 500px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      margin: 50px auto;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-header {
+      background: #007bff;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 10px;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 5px;
+    }
+
+    .chat-input button {
+      padding: 5px 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .login-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container input {
+      margin: 10px 0;
+      padding: 8px;
+      width: 80%;
+    }
+
+    .login-container button {
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Контейнер входа -->
+  <div class="login-container" id="loginContainer">
+    <h3>Вход для администратора</h3>
+    <input type="text" id="adminUsername" placeholder="Логин" />
+    <input type="password" id="adminPassword" placeholder="Пароль" />
+    <button onclick="loginAdmin()">Войти</button>
+  </div>
+
+  <!-- Контейнер чата (по умолчанию скрыт) -->
+  <div class="chat-container" id="chatContainer" style="display: none;">
+    <div class="chat-header">Чат поддержки (Админ) <button onclick="logout()"
+        style="float:right; background: red; color: white; border: none; cursor: pointer;">Выход</button></div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Введите сообщение..." />
+      <button onclick="sendMessage()">Отправить</button>
+    </div>
+  </div>
+
+  <script>
+    async function loginAdmin() {
+      const username = document.getElementById("adminUsername").value;
+      const password = document.getElementById("adminPassword").value;
+
+      const response = await fetch("/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (response.ok) {
+        sessionStorage.setItem("adminAuthenticated", "true");
+        checkAuth();
+      } else {
+        alert("Неверный логин или пароль!");
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem("adminAuthenticated");
+      location.reload();
+    }
+
+    function checkAuth() {
+      if (sessionStorage.getItem("adminAuthenticated") === "true") {
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("chatContainer").style.display = "flex";
+        connectWebSocket();
+      }
+    }
+
+    function connectWebSocket() {
+      const ws = new WebSocket('ws://localhost:8080/ws?admin=true');
+
+      ws.onmessage = function (event) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageElement = document.createElement('div');
+        messageElement.textContent = event.data;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      };
+
+      window.sendMessage = function () {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        if (message !== "") {
+          ws.send(message);
+          const chatMessages = document.getElementById('chatMessages');
+          const messageElement = document.createElement('div');
+          messageElement.textContent = "Вы: " + message;
+          chatMessages.appendChild(messageElement);
+          input.value = "";
+        }
+      };
+
+      document.getElementById('chatInput').addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+          sendMessage();
+        }
+      });
+    }
+
+    checkAuth();
+  </script>
+
+</body>
+
+</html>
